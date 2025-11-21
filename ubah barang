@@ -1,0 +1,22 @@
+<?php
+// Pastikan file koneksi.php sudah terhubung
+include_once 'koneksi.php';
+
+// 1. Ambil ID dari URL
+// ID ini dikirim dari link 'Hapus' di index.php (Contoh: hapus.php?id=3)
+$id = $_GET['id'];
+
+// 2. Buat Query DELETE
+// Query ini akan menghapus data pada tabel data_barang
+// yang memiliki id_barang sama dengan ID yang didapat dari URL
+$sql = "DELETE FROM data_barang WHERE id_barang = '{$id}'";
+
+// 3. Jalankan Query
+$result = mysqli_query($conn, $sql);
+
+// 4. Redirect kembali ke halaman utama (index.php) setelah selesai
+header('location: index.php');
+
+// Catatan: Script akan berhenti di sini karena header('location')
+// Jika tidak berhasil, tidak ada pesan error yang ditampilkan, tapi data tidak akan terhapus.
+?>
