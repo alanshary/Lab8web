@@ -1,0 +1,108 @@
+<?php
+error_reporting(E_ALL);
+include_once 'koneksi.php';
+
+// 1. Logika Pemrosesan Form (Jika tombol 'submit' ditekan)
+if (isset($_POST['submit'])) {
+    $id = $_POST['id'];
+    $nama = $_POST['nama'];
+    $kategori = $_POST['kategori'];
+    $harga_jual = $_POST['harga_jual'];
+    $harga_beli = $_POST['harga_beli'];
+    $stok = $_POST['stok'];
+    $file_gambar = $_FILES['file_gambar'];
+    $gambar = null;
+
+    // Proses upload gambar baru (sama seperti di tambah.php)
+    if ($file_gambar['error'] == 0) {
+        $filename = str_replace(' ', '_', $file_gambar['name']);
+        $destination = dirname(__FILE__) . '/gambar/' . $filename;
+        if (move_uploaded_file($file_gambar['tmp_name'], $destination)) {
+            $gambar = $filename;
+        }
+    }
+
+    // Query untuk UPDATE data
+    $sql = "UPDATE data_barang SET nama = '{$nama}', kategori = '{$kategori}', ";
+    $sql .= "harga_jual = '{$harga_jual}', harga_beli = '{$harga_beli}', stok = '{$stok}' ";
+    
+    // Hanya update kolom 'gambar' jika ada file baru yang diupload
+    if (!empty($gambar)) {
+        $sql .= ", gambar = '{$gambar}' ";
+    }
+    
+    // Kondisi WHERE sangat penting agar hanya data yang memiliki id_barang tersebut yang diubah
+    $sql .= "WHERE id_barang = '{$id}'";
+    
+    $result = mysqli_query($conn, $sql);
+    
+    // Redirect kembali ke halaman utama
+    header('location: index.php');
+}
+
+// 2. Logika Pengambilan Data Lama (Saat halaman baru dibuka)
+// Ambil ID dari URL (Contoh: ubah.php?id=1)
+$id = $_GET['id'];
+$sql = "SELECT * FROM data_barang WHERE id_barang = '{$id}'";
+$result = mysqli_query($conn, $sql);
+
+if (!$result) die('Error: Data tidak tersedia');
+$data = mysqli_fetch_array($result); // Ambil satu baris data saja
+
+// Fungsi helper untuk menentukan opsi 'selected' pada dropdown kategori
+function is_select($var, $val) {
+    if ($var == $val) return 'selected="selected"';
+    return false;
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="style.css" rel="stylesheet" type="text/css" />
+    <title>Ubah Barang</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Ubah Barang</h1>
+        <div class="main">
+            <form method="post" action="ubah.php" enctype="multipart/form-data">
+                <div class="input">
+                    <label>Nama Barang</label>
+                    <input type="text" name="nama" value="<?php echo $data['nama'];?>" required />
+                </div>
+                <div class="input">
+                    <label>Kategori</label>
+                    <select name="kategori">
+                        <option <?php echo is_select($data['kategori'], 'Komputer');?> value="Komputer">Komputer</option>
+                        <option <?php echo is_select($data['kategori'], 'Elektronik');?> value="Elektronik">Elektronik</option>
+                        <option <?php echo is_select($data['kategori'], 'Hand Phone');?> value="Hand Phone">Hand Phone</option>
+                    </select>
+                </div>
+                <div class="input">
+                    <label>Harga Jual</label>
+                    <input type="number" name="harga_jual" value="<?php echo $data['harga_jual'];?>" required />
+                </div>
+                <div class="input">
+                    <label>Harga Beli</label>
+                    <input type="number" name="harga_beli" value="<?php echo $data['harga_beli'];?>" required />
+                </div>
+                <div class="input">
+                    <label>Stok</label>
+                    <input type="number" name="stok" value="<?php echo $data['stok'];?>" required />
+                </div>
+                <div class="input">
+                    <label>File Gambar (Kosongkan jika tidak diubah)</label>
+                    <p>Gambar saat ini: <?php echo $data['gambar'] ? $data['gambar'] : 'Tidak ada gambar'; ?></p>
+                    <input type="file" name="file_gambar" />
+                </div>
+                <div class="submit">
+                    <input type="hidden" name="id" value="<?php echo $data['id_barang'];?>" />
+                    <input type="submit" name="submit" value="Simpan Perubahan" />
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
